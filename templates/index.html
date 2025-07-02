@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时翻译服务</title>
+    
+    <!-- LiveKit Web SDK -->
+    <script src="https://unpkg.com/livekit-client@1.12.0/dist/livekit-client.umd.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --dark-color: #333;
+            --light-color: #f4f7ff;
+            --grey-color: #6c757d;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            color: var(--grey-color);
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .language-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .language-button {
+            background-color: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .language-button span {
+            margin-top: 0.5rem;
+        }
+        
+        .language-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .language-button.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background-color: var(--grey-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .player-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+            background-color: #f0f4ff;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .status-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .connected {
+            background-color: var(--success-color);
+        }
+        
+        .error {
+            background-color: var(--error-color);
+        }
+        
+        .volume-control {
+            width: 100%;
+            max-width: 300px;
+            margin: 1rem 0;
+        }
+        
+        .volume-control input {
+            width: 100%;
+        }
+        
+        .volume-control label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--grey-color);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 600px) {
+            .language-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>实时翻译服务</h1>
+            <p>选择您需要的语言并开始收听</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <h2>选择语言</h2>
+                
+                <div id="language-selector" class="language-selector">
+                    <button class="language-button" data-language="en">
+                        🇺🇸
+                        <span>英语</span>
+                    </button>
+                    <button class="language-button" data-language="vi">
+                        🇻🇳
+                        <span>越南语</span>
+                    </button>
+                    <button class="language-button" data-language="id">
+                        🇮🇩
+                        <span>印尼语</span>
+                    </button>
+                    <button class="language-button" data-language="kr">
+                        🇰🇷
+                        <span>韩语</span>
+                    </button>
+                </div>
+                
+                <div class="control-buttons">
+                    <button id="connect-button">连接</button>
+                    <button id="mute-button" disabled>静音</button>
+                </div>
+                
+                <div id="player-container" class="player-container">
+                    <div class="status-container">
+                        <div id="connection-status" class="status-indicator"></div>
+                        <span>正在连接...</span>
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="volume-slider">音量控制</label>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 实时翻译服务 | 由 LiveKit 提供技术支持</p>
+        </footer>
+    </div>
+    
+    <!-- 自定义脚本 -->
+    <script src="/static/player.js"></script>
+</body>
+</html> 
