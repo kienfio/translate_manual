@@ -8,15 +8,7 @@ import logging
 from typing import Optional
 import wave
 
-from livekit.rtc import (
-    RtcEngine, 
-    VideoTrackPublishOptions, 
-    AudioSource, 
-    TrackOption, 
-    AudioTrackPublishOptions,
-    FileAudioSource,
-    MicrophoneAudioSource
-)
+from livekit import rtc
 from token_generator import generate_token
 
 # 配置日志
@@ -65,7 +57,7 @@ class AudioUploader:
             raise ValueError("无法生成LiveKit访问令牌")
         
         # 创建RTC引擎
-        self.engine = RtcEngine()
+        self.engine = rtc.RtcEngine()
         
         # 连接到房间
         logger.info(f"连接到LiveKit房间: {self.room_name}")
@@ -74,7 +66,7 @@ class AudioUploader:
         # 设置音频源
         if self.source_type == 'mic':
             logger.info("使用麦克风作为音频源")
-            self.audio_source = MicrophoneAudioSource()
+            self.audio_source = rtc.MicrophoneAudioSource()
         else:  # file
             logger.info(f"使用文件作为音频源: {self.file_path}")
             
@@ -85,7 +77,7 @@ class AudioUploader:
                 frame_rate = wav_file.getframerate()
                 logger.info(f"音频文件: 通道数={channels}, 采样率={frame_rate}Hz")
                 
-            self.audio_source = FileAudioSource(
+            self.audio_source = rtc.FileAudioSource(
                 file_path=self.file_path,
                 loop=True  # 循环播放文件
             )
@@ -101,8 +93,8 @@ class AudioUploader:
         await self.audio_source.start()
         
         # 发布音频轨道
-        audio_options = TrackOption()
-        publish_options = AudioTrackPublishOptions(
+        audio_options = rtc.TrackOption()
+        publish_options = rtc.AudioTrackPublishOptions(
             source=self.audio_source,
             track_option=audio_options
         )
