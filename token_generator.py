@@ -1,5 +1,5 @@
 import os
-from livekit import AccessToken, RoomServiceClient, VideoGrant, Room
+from livekit_api import AccessToken, RoomServiceClient, VideoGrant
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -35,7 +35,7 @@ def create_room_if_not_exists(room_name: str) -> bool:
             print(f"房间 {room_name} 已存在")
         except Exception:
             # 房间不存在，创建新房间
-            room: Room = room_client.create_room(
+            room = room_client.create_room(
                 name=room_name,
                 empty_timeout=300,  # 设置空房间超时时间为5分钟
                 max_participants=100  # 最大参与人数
