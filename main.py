@@ -5,13 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from token_generator import generate_token
 import uvicorn
-from dotenv import load_dotenv
-
-# 尝试加载.env文件，但在Render部署时会使用环境变量
-load_dotenv()
-
-# 从环境变量获取LiveKit配置
-LIVEKIT_URL = os.getenv('LIVEKIT_URL')  # 例如: wss://your-project.livekit.cloud
+from config.settings import settings
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -28,7 +22,7 @@ templates = Jinja2Templates(directory="templates")
 
 # 验证LiveKit配置
 async def verify_livekit_config():
-    if not LIVEKIT_URL:
+    if not settings.LIVEKIT_URL:
         raise HTTPException(
             status_code=500,
             detail="LiveKit配置缺失。请确保设置了LIVEKIT_URL环境变量。"
@@ -69,7 +63,7 @@ async def get_token(
     # 返回令牌和URL信息
     return JSONResponse(content={
         "token": token,
-        "url": LIVEKIT_URL,
+        "url": settings.LIVEKIT_URL,
         "room": room,
         "identity": identity
     })
@@ -84,7 +78,7 @@ async def health_check():
 async def startup_event():
     print("应用启动中...")
     # 这里可以添加应用启动时需要执行的逻辑
-    print(f"LiveKit URL: {LIVEKIT_URL}")
+    print(f"LiveKit URL: {settings.LIVEKIT_URL}")
 
 # 主函数
 if __name__ == "__main__":
@@ -92,6 +86,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
-        port=int(os.getenv("PORT", "8000")),
+        port=settings.PORT,
         reload=True
     ) 
