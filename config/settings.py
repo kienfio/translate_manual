@@ -12,6 +12,12 @@ class Settings:
     
     # 服务器配置
     PORT = int(os.getenv('PORT', '8000'))
+    
+    def log(self):
+        print("🔍 [DEBUG] LIVEKIT_API_KEY:", "FOUND" if self.LIVEKIT_API_KEY else "MISSING")
+        print("🔍 [DEBUG] LIVEKIT_SECRET:", "FOUND" if self.LIVEKIT_SECRET else "MISSING")
+        print("🔍 [DEBUG] LIVEKIT_URL:", self.LIVEKIT_URL or "MISSING")
+        print("🔍 [DEBUG] PORT:", self.PORT)
 
 # 创建全局设置实例
 settings = Settings() 
