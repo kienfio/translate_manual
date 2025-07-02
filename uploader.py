@@ -7,19 +7,26 @@ import logging
 from typing import Optional
 import wave
 
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
 # 导入LiveKit RTC库
 try:
     from livekit import rtc
+    logger.info("✅ LiveKit RTC库导入成功")
 except ImportError as e:
-    logging.error(f"导入LiveKit RTC库失败: {str(e)}. 请确保已安装正确版本的LiveKit库。")
+    logger.error(f"❌ 导入LiveKit RTC库失败: {str(e)}. 请确保已安装正确版本的LiveKit库。")
     sys.exit(1)
 
 from token_generator import generate_token
 from config.settings import settings
-
-# 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 class AudioUploader:
     def __init__(self, room_name: str, identity: str, source_type: str, file_path: Optional[str] = None):
@@ -40,101 +47,116 @@ class AudioUploader:
         self.audio_source = None
         self.running = False
         
+        logger.info(f"🔧 初始化音频上传器: 房间={room_name}, 身份={identity}, 源类型={source_type}")
+        
         # 验证参数
         if source_type == 'file' and (not file_path or not os.path.exists(file_path)):
+            logger.error(f"❌ 文件模式需要有效的文件路径，但提供的路径无效: {file_path}")
             raise ValueError(f"文件模式需要有效的文件路径，但提供的路径无效: {file_path}")
         
         if not settings.LIVEKIT_URL:
+            logger.error("❌ 缺少LIVEKIT_URL环境变量")
             raise ValueError("缺少LIVEKIT_URL环境变量")
     
     async def setup(self):
         """设置RTC引擎和音频源"""
-        logger.info(f"设置音频上传器: 房间={self.room_name}, 身份={self.identity}")
+        logger.info(f"🔄 设置音频上传器: 房间={self.room_name}, 身份={self.identity}")
         
         # 获取发布者访问令牌
+        logger.info("🔑 获取发布者访问令牌")
         token = generate_token(self.room_name, self.identity, is_publisher=True)
         if not token:
+            logger.error("❌ 无法生成LiveKit访问令牌")
             raise ValueError("无法生成LiveKit访问令牌")
         
         try:
             # 创建RTC引擎
+            logger.info("🛠️ 创建RTC引擎")
             self.engine = rtc.RtcEngine()
             
             # 连接到房间
-            logger.info(f"连接到LiveKit房间: {self.room_name}")
+            logger.info(f"🔌 连接到LiveKit房间: {self.room_name}")
             await self.engine.connect(settings.LIVEKIT_URL, token)
+            logger.info("✅ 连接成功")
             
             # 设置音频源
             if self.source_type == 'mic':
-                logger.info("使用麦克风作为音频源")
+                logger.info("🎤 使用麦克风作为音频源")
                 self.audio_source = rtc.MicrophoneAudioSource()
             else:  # file
-                logger.info(f"使用文件作为音频源: {self.file_path}")
+                logger.info(f"📁 使用文件作为音频源: {self.file_path}")
                 
                 # 获取文件格式和采样率信息
                 with wave.open(self.file_path, 'rb') as wav_file:
                     channels = wav_file.getnchannels()
                     sample_width = wav_file.getsampwidth()
                     frame_rate = wav_file.getframerate()
-                    logger.info(f"音频文件: 通道数={channels}, 采样率={frame_rate}Hz")
+                    logger.info(f"📊 音频文件信息: 通道数={channels}, 采样率={frame_rate}Hz")
                     
                 self.audio_source = rtc.FileAudioSource(
                     file_path=self.file_path,
                     loop=True  # 循环播放文件
                 )
         except Exception as e:
-            logger.error(f"设置RTC引擎失败: {str(e)}")
+            logger.error(f"❌ 设置RTC引擎失败: {str(e)}")
             raise
     
     async def start_publishing(self):
         """开始发布音频流"""
         if not self.engine or not self.audio_source:
+            logger.error("❌ RTC引擎或音频源尚未设置")
             raise ValueError("RTC引擎或音频源尚未设置")
         
         self.running = True
         
         try:
             # 启动音频源
+            logger.info("▶️ 启动音频源")
             await self.audio_source.start()
             
             # 发布音频轨道
+            logger.info("📡 准备发布音频轨道")
             audio_options = rtc.TrackOption()
             publish_options = rtc.AudioTrackPublishOptions(
                 source=self.audio_source,
                 track_option=audio_options
             )
             
-            logger.info(f"开始发布音频到房间: {self.room_name}")
+            logger.info(f"🚀 开始发布音频到房间: {self.room_name}")
             await self.engine.local_participant.publish_audio_track("audio_track", publish_options)
+            logger.info("✅ 音频轨道发布成功")
             
             # 保持连接
             try:
+                logger.info("⏳ 保持连接中...")
                 while self.running:
                     await asyncio.sleep(1)
             except asyncio.CancelledError:
-                logger.info("上传被取消")
+                logger.info("⚠️ 上传被取消")
                 self.running = False
             finally:
                 await self.cleanup()
         except Exception as e:
-            logger.error(f"发布音频失败: {str(e)}")
+            logger.error(f"❌ 发布音频失败: {str(e)}")
             await self.cleanup()
             raise
     
     async def cleanup(self):
         """清理资源"""
-        logger.info("清理资源...")
+        logger.info("🧹 清理资源...")
         if self.audio_source:
             try:
+                logger.info("⏹️ 停止音频源")
                 await self.audio_source.stop()
             except Exception as e:
-                logger.error(f"停止音频源失败: {str(e)}")
+                logger.error(f"❌ 停止音频源失败: {str(e)}")
         
         if self.engine:
             try:
+                logger.info("🔌 断开RTC引擎连接")
                 await self.engine.disconnect()
             except Exception as e:
-                logger.error(f"断开RTC引擎连接失败: {str(e)}")
+                logger.error(f"❌ 断开RTC引擎连接失败: {str(e)}")
 
 async def main():
     """主函数"""
@@ -147,9 +169,15 @@ async def main():
     args = parser.parse_args()
     
     if args.source == 'file' and not args.file:
+        logger.error("❌ --source=file 时，必须提供 --file 参数")
         parser.error("--source=file 时，必须提供 --file 参数")
     
+    # 打印环境变量状态
+    logger.info("🚀 上传器启动中，打印环境变量状态：")
+    settings.log()
+    
     try:
+        logger.info(f"🔧 创建上传器: 房间={args.room}, 身份={args.identity}, 源={args.source}")
         uploader = AudioUploader(
             room_name=args.room,
             identity=args.identity,
@@ -157,12 +185,15 @@ async def main():
             file_path=args.file
         )
         
+        logger.info("🔄 设置上传器...")
         await uploader.setup()
+        
+        logger.info("🚀 开始发布...")
         await uploader.start_publishing()
     except KeyboardInterrupt:
-        logger.info("程序被用户中断")
+        logger.info("⚠️ 程序被用户中断")
     except Exception as e:
-        logger.error(f"发生错误: {str(e)}")
+        logger.error(f"❌ 发生错误: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
