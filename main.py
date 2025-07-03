@@ -50,6 +50,15 @@ async def get_interpreter(request: Request, _=Depends(verify_livekit_config)):
         {"request": request}
     )
 
+# 观众收听页面 - 返回观众收听界面
+@app.get("/interpreter.html", response_class=HTMLResponse)
+async def get_interpreter_audience(request: Request, _=Depends(verify_livekit_config)):
+    print("🎧 访问观众收听页面")
+    return templates.TemplateResponse(
+        "interpreter_audience.html",
+        {"request": request}
+    )
+
 # 生成房间访问令牌
 @app.get("/token")
 async def get_token(
