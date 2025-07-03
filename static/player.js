@@ -234,6 +234,9 @@ async function connectToChannel(language) {
                 muteButton.disabled = false;
                 muteButton.onclick = toggleMute;
             }
+            
+            // 更新URL参数，但不刷新页面
+            updateUrlParam('lang', language);
         } else {
             if (connectButton) {
                 connectButton.disabled = false;
@@ -287,6 +290,9 @@ async function disconnectFromChannel() {
         if (muteButton) {
             muteButton.disabled = true;
         }
+        
+        // 移除URL参数
+        removeUrlParam('lang');
     } catch (error) {
         console.error('断开连接错误:', error);
         
@@ -332,6 +338,67 @@ function selectLanguage(language) {
     }
 }
 
+// 获取URL参数
+function getUrlParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+// 更新URL参数，不刷新页面
+function updateUrlParam(key, value) {
+    const url = new URL(window.location.href);
+    url.searchParams.set(key, value);
+    window.history.pushState({}, '', url);
+}
+
+// 移除URL参数，不刷新页面
+function removeUrlParam(key) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(key);
+    window.history.pushState({}, '', url);
+}
+
+// 生成二维码
+function generateQRCodes() {
+    const languages = ['en', 'vi', 'id', 'kr'];
+    const baseUrl = window.location.origin + window.location.pathname;
+    
+    languages.forEach(lang => {
+        const qrCanvas = document.getElementById(`qrcode-${lang}`);
+        if (qrCanvas) {
+            const qrUrl = `${baseUrl}?lang=${lang}`;
+            QRCode.toCanvas(qrCanvas, qrUrl, {
+                width: 128,
+                margin: 1,
+                color: {
+                    dark: '#4a6cf7',
+                    light: '#ffffff'
+                }
+            }, function(error) {
+                if (error) console.error(`生成${lang}二维码失败:`, error);
+            });
+        }
+    });
+}
+
+// 检查URL参数并自动连接
+function checkUrlAndAutoConnect() {
+    const langParam = getUrlParam('lang');
+    
+    if (langParam) {
+        const validLanguages = ['en', 'vi', 'id', 'kr'];
+        if (validLanguages.includes(langParam)) {
+            // 选择对应的语言
+            selectLanguage(langParam);
+            
+            // 自动连接
+            setTimeout(() => {
+                connectToChannel(langParam);
+            }, 500);
+        }
+    }
+}
+
 // 页面加载完成时初始化
 document.addEventListener('DOMContentLoaded', () => {
     const languageButtons = document.querySelectorAll('#language-selector button');
@@ -355,4 +422,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    // 生成二维码
+    generateQRCodes();
+    
+    // 检查URL参数并自动连接
+    checkUrlAndAutoConnect();
 }); 
