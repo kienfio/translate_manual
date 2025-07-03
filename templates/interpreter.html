@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻译员音频推流</title>
+    
+    <!-- LiveKit Web SDK -->
+    <script src="https://unpkg.com/livekit-client@1.12.0/dist/livekit-client.umd.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --dark-color: #333;
+            --light-color: #f4f7ff;
+            --grey-color: #6c757d;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            color: var(--grey-color);
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background-color: var(--grey-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        button.stop {
+            background-color: var(--error-color);
+        }
+        
+        .status-container {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
+        .status-connecting {
+            background-color: var(--warning-color);
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status-connected {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .status-error {
+            background-color: var(--error-color);
+            color: white;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .mic-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        
+        .mic-level {
+            width: 100%;
+            max-width: 300px;
+            height: 20px;
+            background-color: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .mic-level-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-color);
+            transition: width 0.1s ease;
+        }
+        
+        .permission-notice {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #fff3cd;
+            border-left: 4px solid var(--warning-color);
+            color: #856404;
+            border-radius: 4px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--grey-color);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>翻译员音频推流</h1>
+            <p>选择语言并开始将麦克风音频推流到指定频道</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <h2>推流设置</h2>
+                
+                <div class="form-group">
+                    <label for="language-select">选择语言</label>
+                    <select id="language-select">
+                        <option value="en">英语 (English)</option>
+                        <option value="vi">越南语 (Tiếng Việt)</option>
+                        <option value="id">印尼语 (Bahasa Indonesia)</option>
+                        <option value="kr">韩语 (한국어)</option>
+                    </select>
+                </div>
+                
+                <div class="permission-notice">
+                    <p><strong>注意：</strong> 点击"开始推流"后，浏览器将请求麦克风访问权限。请确保允许访问以开始推流。</p>
+                </div>
+                
+                <div class="control-buttons">
+                    <button id="start-button">开始推流</button>
+                    <button id="stop-button" class="stop" disabled>停止推流</button>
+                </div>
+                
+                <div id="status-container" class="status-container">
+                    <div class="status-indicator"></div>
+                    <span id="status-text">准备就绪</span>
+                </div>
+                
+                <div class="mic-indicator">
+                    <div class="mic-level">
+                        <div id="mic-level-bar" class="mic-level-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 实时翻译服务 | 由 LiveKit 提供技术支持</p>
+        </footer>
+    </div>
+    
+    <!-- 自定义脚本 -->
+    <script src="/static/js/interpreter.js"></script>
+</body>
+</html> 
