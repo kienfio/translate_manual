@@ -51,8 +51,17 @@ class LiveKitAudioPlayer {
             this.currentRoom = roomName;
             this.updateStatus(`正在连接到 ${roomName}...`);
             
-            // 创建并连接到房间
-            this.room = new LivekitClient.Room();
+            // 创建并连接到房间，使用新的连接方式并添加autoSubscribe参数
+            try {
+                this.room = await LivekitClient.connect(url, token, {
+                    autoSubscribe: true
+                });
+            } catch (error) {
+                console.error("连接 LiveKit 失败:", error);
+                this.updateStatus(`连接失败: ${error.message}`, true);
+                alert("连接失败，请刷新页面重试。错误: " + error.message);
+                return false;
+            }
             
             // 设置事件监听器
             this.room.on(LivekitClient.RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
@@ -64,12 +73,6 @@ class LiveKitAudioPlayer {
                 this.isConnected = false;
             });
             
-            // 连接到房间
-            await this.room.connect(url, token);
-            
-            // 自动订阅轨道
-            await this.room.localParticipant.setAutoSubscribe(true);
-            
             this.isConnected = true;
             this.updateStatus(`已连接到 ${roomName}`);
             
@@ -77,6 +80,7 @@ class LiveKitAudioPlayer {
         } catch (error) {
             this.updateStatus(`连接失败: ${error.message}`, true);
             console.error('连接错误:', error);
+            alert(`连接失败，请刷新页面重试。错误: ${error.message}`);
             return false;
         }
     }
