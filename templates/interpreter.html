@@ -106,7 +106,7 @@ class InterpreterController {
             
             try {
                 // 使用新的连接方式
-                this.room = await LivekitClient.connect(tokenData.url, tokenData.token, {
+                this.room = await LiveKit.connect(tokenData.url, tokenData.token, {
                     autoSubscribe: true,
                     adaptiveStream: false,
                     dynacast: true,
@@ -116,12 +116,12 @@ class InterpreterController {
                 });
                 
                 // 设置事件监听
-                this.room.on(LivekitClient.RoomEvent.Disconnected, () => {
+                this.room.on(LiveKit.RoomEvent.Disconnected, () => {
                     this.updateStatus('已断开连接', 'error');
                     this.handleDisconnect();
                 });
                 
-                this.room.on(LivekitClient.RoomEvent.ConnectionStateChanged, (state) => {
+                this.room.on(LiveKit.RoomEvent.ConnectionStateChanged, (state) => {
                     console.log(`连接状态变更: ${state}`);
                 });
                 
@@ -150,7 +150,7 @@ class InterpreterController {
             this.updateStatus('正在请求麦克风权限...', 'connecting');
             
             // 请求麦克风权限并创建音频轨道
-            this.localTrack = await LivekitClient.createLocalAudioTrack({
+            this.localTrack = await LiveKit.createLocalAudioTrack({
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: true
