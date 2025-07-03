@@ -53,7 +53,7 @@ class LiveKitAudioPlayer {
             
             // 创建并连接到房间，使用新的连接方式并添加autoSubscribe参数
             try {
-                this.room = await LivekitClient.connect(url, token, {
+                this.room = await LiveKit.connect(url, token, {
                     autoSubscribe: true
                 });
             } catch (error) {
@@ -64,11 +64,11 @@ class LiveKitAudioPlayer {
             }
             
             // 设置事件监听器
-            this.room.on(LivekitClient.RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
-            this.room.on(LivekitClient.RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
-            this.room.on(LivekitClient.RoomEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
-            this.room.on(LivekitClient.RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
-            this.room.on(LivekitClient.RoomEvent.Disconnected, () => {
+            this.room.on(LiveKit.RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
+            this.room.on(LiveKit.RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
+            this.room.on(LiveKit.RoomEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
+            this.room.on(LiveKit.RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
+            this.room.on(LiveKit.RoomEvent.Disconnected, () => {
                 this.updateStatus('已断开连接', true);
                 this.isConnected = false;
             });
