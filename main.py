@@ -41,14 +41,24 @@ async def get_index(request: Request, _=Depends(verify_livekit_config)):
         {"request": request}
     )
 
+# 翻译员页面 - 返回翻译员推流界面
+@app.get("/interpreter", response_class=HTMLResponse)
+async def get_interpreter(request: Request, _=Depends(verify_livekit_config)):
+    print("🎤 访问翻译员页面")
+    return templates.TemplateResponse(
+        "interpreter.html",
+        {"request": request}
+    )
+
 # 生成房间访问令牌
 @app.get("/token")
 async def get_token(
     room: str, 
-    identity: str, 
+    identity: str,
+    is_publisher: bool = False,
     _=Depends(verify_livekit_config)
 ):
-    print(f"🟢 收到 token 请求 → room: {room}, identity: {identity}")
+    print(f"🟢 收到 token 请求 → room: {room}, identity: {identity}, is_publisher: {is_publisher}")
     
     # 验证参数
     if not room or not identity:
@@ -58,10 +68,10 @@ async def get_token(
             detail="缺少必需的参数: room 和 identity"
         )
     
-    # 生成观众访问令牌（非发布者）
+    # 生成访问令牌
     print("🧠 正在生成 AccessToken...")
     try:
-        token = generate_token(room, identity, is_publisher=False)
+        token = generate_token(room, identity, is_publisher=is_publisher)
         
         if not token:
             print("❌ Token 生成失败: 返回值为空")
