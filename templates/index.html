@@ -8,6 +8,9 @@
     <!-- LiveKit Web SDK -->
     <script src="https://unpkg.com/livekit-client@1.12.0/dist/livekit-client.umd.js"></script>
     
+    <!-- QRCode库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    
     <style>
         :root {
             --primary-color: #4a6cf7;
@@ -182,6 +185,44 @@
             color: var(--dark-color);
         }
         
+        /* 二维码样式 */
+        .qrcode-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .qrcode-title {
+            font-size: 0.9rem;
+            color: var(--grey-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .qrcode-canvas {
+            margin: 0 auto;
+            max-width: 100%;
+        }
+        
+        .language-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .language-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
         footer {
             text-align: center;
             margin-top: 2rem;
@@ -212,22 +253,49 @@
                 <h2>选择语言</h2>
                 
                 <div id="language-selector" class="language-selector">
-                    <button class="language-button" data-language="en">
-                        🇺🇸
-                        <span>英语</span>
-                    </button>
-                    <button class="language-button" data-language="vi">
-                        🇻🇳
-                        <span>越南语</span>
-                    </button>
-                    <button class="language-button" data-language="id">
-                        🇮🇩
-                        <span>印尼语</span>
-                    </button>
-                    <button class="language-button" data-language="kr">
-                        🇰🇷
-                        <span>韩语</span>
-                    </button>
+                    <div class="language-card">
+                        <button class="language-button" data-language="en">
+                            🇺🇸
+                            <span>英语</span>
+                        </button>
+                        <div class="qrcode-container">
+                            <div class="qrcode-title">扫码直接收听英语</div>
+                            <canvas id="qrcode-en" class="qrcode-canvas"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="language-card">
+                        <button class="language-button" data-language="vi">
+                            🇻🇳
+                            <span>越南语</span>
+                        </button>
+                        <div class="qrcode-container">
+                            <div class="qrcode-title">扫码直接收听越南语</div>
+                            <canvas id="qrcode-vi" class="qrcode-canvas"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="language-card">
+                        <button class="language-button" data-language="id">
+                            🇮🇩
+                            <span>印尼语</span>
+                        </button>
+                        <div class="qrcode-container">
+                            <div class="qrcode-title">扫码直接收听印尼语</div>
+                            <canvas id="qrcode-id" class="qrcode-canvas"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="language-card">
+                        <button class="language-button" data-language="kr">
+                            🇰🇷
+                            <span>韩语</span>
+                        </button>
+                        <div class="qrcode-container">
+                            <div class="qrcode-title">扫码直接收听韩语</div>
+                            <canvas id="qrcode-kr" class="qrcode-canvas"></canvas>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="control-buttons">
