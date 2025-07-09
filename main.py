@@ -191,14 +191,6 @@ async def get_token(
         
         print("✅ Token 生成成功")
         
-        # 记录审计日志
-        AuditLogger.log_token_event(
-            event="generated",
-            room_name=room,
-            user_id=identity,
-            is_publisher=is_publisher
-        )
-        
         # 返回令牌和URL信息
         return JSONResponse(content={
             "token": token,
@@ -210,14 +202,8 @@ async def get_token(
     except Exception as e:
         print(f"❌ Token 生成失败: {str(e)}")
         
-        # 记录错误日志
-        AuditLogger.log_error(
-            event="token_generation_failed",
-            user_id=identity,
-            error=e,
-            details={"room": room, "is_publisher": is_publisher}
-        )
-        
+        # 避免递归错误，不再调用AuditLogger
+        # 直接返回错误响应
         raise HTTPException(
             status_code=500,
             detail=f"Token 生成失败: {str(e)}"
