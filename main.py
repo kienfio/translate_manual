@@ -34,6 +34,17 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # 设置模板
 templates = Jinja2Templates(directory="templates")
 
+# 添加JS路径别名路由
+@app.get("/js/{file_path:path}")
+async def get_js_file(file_path: str):
+    # 重定向到正确的静态文件路径
+    return RedirectResponse(url=f"/static/js/{file_path}")
+
+# 添加favicon.ico路由
+@app.get("/favicon.ico")
+async def get_favicon():
+    return FileResponse("static/favicon.ico", media_type="image/x-icon")
+
 # 活跃的WebSocket连接
 active_websockets: Dict[str, List[WebSocket]] = {}
 
