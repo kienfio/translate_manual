@@ -37,23 +37,14 @@ templates = Jinja2Templates(directory="templates")
 # 添加JS路径别名路由
 @app.get("/js/{file_path:path}")
 async def get_js_file(file_path: str):
-    # 检查文件是否存在
-    js_path = f"static/js/{file_path}"
-    if os.path.exists(js_path):
-        return FileResponse(js_path)
-    else:
-        # 文件不存在时返回404，但不抛出异常
-        return Response(status_code=404)
+    # 直接重定向到正确的静态文件路径
+    return RedirectResponse(url=f"/static/js/{file_path}", status_code=301)
 
 # 添加favicon.ico路由
 @app.get("/favicon.ico")
 async def get_favicon():
-    # 检查文件是否存在
-    if os.path.exists("static/favicon.ico"):
-        return FileResponse("static/favicon.ico", media_type="image/x-icon")
-    else:
-        # 文件不存在时返回空响应，避免错误
-        return Response(status_code=204)
+    # 返回空响应，避免错误
+    return Response(status_code=204)
 
 # 活跃的WebSocket连接
 active_websockets: Dict[str, List[WebSocket]] = {}
