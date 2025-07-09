@@ -12,6 +12,7 @@ prometheus-client
 structlog
 twilio
 websockets
-redis
-aioredis
+redis>=4.3.4
 setuptools>=65.5.0
+# 使用redis替代aioredis，因为aioredis已合并到redis库中
+# aioredis
