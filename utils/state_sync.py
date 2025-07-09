@@ -1,6 +1,6 @@
 import json
 import asyncio
-import aioredis
+import redis.asyncio as redis
 from typing import Dict, Any, Optional, List, Callable, Awaitable
 from config.settings import settings
 from utils.audit_logger import AuditLogger
@@ -29,7 +29,7 @@ class StateManager:
         
         try:
             # 连接到Redis
-            self.redis = await aioredis.from_url(settings.REDIS_URL)
+            self.redis = redis.from_url(settings.REDIS_URL)
             self.is_connected = True
             
             # 初始化PubSub
