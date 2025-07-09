@@ -14,3 +14,4 @@ twilio
 websockets
 redis
 aioredis
+setuptools>=65.5.0
