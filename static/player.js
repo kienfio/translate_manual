@@ -51,27 +51,24 @@ class LiveKitAudioPlayer {
             this.currentRoom = roomName;
             this.updateStatus(`正在连接到 ${roomName}...`);
             
-            // 创建并连接到房间，使用新的连接方式并添加autoSubscribe参数
-            try {
-                this.room = await LiveKit.connect(url, token, {
-                    autoSubscribe: true
-                });
-            } catch (error) {
-                console.error("连接 LiveKit 失败:", error);
-                this.updateStatus(`连接失败: ${error.message}`, true);
-                alert("连接失败，请刷新页面重试。错误: " + error.message);
-                return false;
-            }
+            // 创建并连接到房间
+            this.room = new LivekitClient.Room();
             
             // 设置事件监听器
-            this.room.on(LiveKit.RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
-            this.room.on(LiveKit.RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
-            this.room.on(LiveKit.RoomEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
-            this.room.on(LiveKit.RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
-            this.room.on(LiveKit.RoomEvent.Disconnected, () => {
+            this.room.on(LivekitClient.RoomEvent.ParticipantConnected, this.handleParticipantConnected.bind(this));
+            this.room.on(LivekitClient.RoomEvent.ParticipantDisconnected, this.handleParticipantDisconnected.bind(this));
+            this.room.on(LivekitClient.RoomEvent.TrackSubscribed, this.handleTrackSubscribed.bind(this));
+            this.room.on(LivekitClient.RoomEvent.TrackUnsubscribed, this.handleTrackUnsubscribed.bind(this));
+            this.room.on(LivekitClient.RoomEvent.Disconnected, () => {
                 this.updateStatus('已断开连接', true);
                 this.isConnected = false;
             });
+            
+            // 连接到房间
+            await this.room.connect(url, token);
+            
+            // 自动订阅轨道
+            await this.room.localParticipant.setAutoSubscribe(true);
             
             this.isConnected = true;
             this.updateStatus(`已连接到 ${roomName}`);
@@ -80,7 +77,6 @@ class LiveKitAudioPlayer {
         } catch (error) {
             this.updateStatus(`连接失败: ${error.message}`, true);
             console.error('连接错误:', error);
-            alert(`连接失败，请刷新页面重试。错误: ${error.message}`);
             return false;
         }
     }
@@ -180,9 +176,10 @@ async function connectToChannel(language) {
         connectButton.disabled = true;
     }
     
-    // 设置房间名称
-    const roomName = `room-${language}`;
-    const identity = `audience-${Date.now()}`;
+    // 设置房间名称 (支持vn作为vi的别名)
+    const roomLanguage = language === 'vn' ? 'vn' : language;
+    const roomName = `room-${roomLanguage}`;
+    const identity = `audience_${Date.now()}`;
     
     try {
         // 获取访问令牌
@@ -391,13 +388,16 @@ function checkUrlAndAutoConnect() {
     
     if (langParam) {
         const validLanguages = ['en', 'vi', 'id', 'kr'];
-        if (validLanguages.includes(langParam)) {
+        // 支持vn作为vi的别名
+        const normalizedLang = langParam === 'vn' ? 'vi' : langParam;
+        
+        if (validLanguages.includes(normalizedLang)) {
             // 选择对应的语言
-            selectLanguage(langParam);
+            selectLanguage(normalizedLang);
             
             // 自动连接
             setTimeout(() => {
-                connectToChannel(langParam);
+                connectToChannel(normalizedLang);
             }, 500);
         }
     }
