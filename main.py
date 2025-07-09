@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI, Request, HTTPException, Depends, WebSocket, WebSocketDisconnect, BackgroundTasks
-from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from token_generator import generate_token
@@ -122,6 +122,18 @@ async def get_interpreter(request: Request, _=Depends(verify_livekit_config)):
             "text_chat_enabled": True
         }
     )
+
+# 添加别名路由 - interpreter.html 指向 interpreter
+@app.get("/interpreter.html", response_class=HTMLResponse)
+async def get_interpreter_html(request: Request, _=Depends(verify_livekit_config)):
+    print("🎤 访问翻译员页面 (通过 /interpreter.html)")
+    return await get_interpreter(request, _)
+
+# 添加别名路由 - translator 指向 interpreter
+@app.get("/translator", response_class=HTMLResponse)
+async def get_translator(request: Request, _=Depends(verify_livekit_config)):
+    print("🎤 访问翻译员页面 (通过 /translator)")
+    return await get_interpreter(request, _)
 
 # 生成房间访问令牌
 @app.get("/token")
