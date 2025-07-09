@@ -60,11 +60,11 @@ class AuditLogger:
             "details": details
         }
         
-        # 使用结构化日志记录
-        structured_logger = structlog.get_logger()
+        # 使用结构化日志记录 - 修复方法调用
         log_method = getattr(structured_logger, level.lower(), structured_logger.info)
+        # 正确的调用方式是将event作为第一个参数，其他信息作为关键字参数
         log_method(
-            event_type=event,
+            event,  # 第一个参数是事件名称
             user_id=user_id,
             **details
         )
