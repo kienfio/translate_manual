@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>实时翻译服务</title>
     
-    <!-- LiveKit Web SDK -->
+    <!-- LiveKit Web SDK - 使用最新版本 -->
     <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
     
     <!-- QRCode库 -->
@@ -246,19 +246,6 @@
         <header>
             <h1>实时翻译服务</h1>
             <p>选择您需要的语言并开始收听</p>
-            <div class="translator-entry" style="margin-top: 1rem;">
-                <a href="/translator?room=room-en" class="translator-button" style="
-                    display: inline-block;
-                    padding: 0.5rem 1rem;
-                    background-color: #4CAF50;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 4px;
-                    font-weight: bold;
-                ">
-                    🎙️ 翻译员入口
-                </a>
-            </div>
         </header>
         
         <main>
@@ -267,7 +254,7 @@
                 
                 <div id="language-selector" class="language-selector">
                     <div class="language-card">
-                        <button class="language-button" data-language="en" data-code="en">
+                        <button class="language-button" data-language="en">
                             🇺🇸
                             <span>英语</span>
                         </button>
@@ -278,7 +265,7 @@
                     </div>
                     
                     <div class="language-card">
-                        <button class="language-button" data-language="vi" data-code="vn">
+                        <button class="language-button" data-language="vi">
                             🇻🇳
                             <span>越南语</span>
                         </button>
@@ -289,7 +276,7 @@
                     </div>
                     
                     <div class="language-card">
-                        <button class="language-button" data-language="id" data-code="id">
+                        <button class="language-button" data-language="id">
                             🇮🇩
                             <span>印尼语</span>
                         </button>
@@ -300,7 +287,7 @@
                     </div>
                     
                     <div class="language-card">
-                        <button class="language-button" data-language="kr" data-code="kr">
+                        <button class="language-button" data-language="kr">
                             🇰🇷
                             <span>韩语</span>
                         </button>
@@ -313,6 +300,19 @@
                 
                 <div class="control-buttons">
                     <button id="connect-button">连接</button>
+                    <button id="mute-button" disabled>静音</button>
+                </div>
+                
+                <div id="player-container" class="player-container">
+                    <div class="status-container">
+                        <div id="connection-status" class="status-indicator"></div>
+                        <span>正在连接...</span>
+                    </div>
+                    
+                    <div class="volume-control">
+                        <label for="volume-slider">音量控制</label>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.7">
+                    </div>
                 </div>
             </div>
         </main>
@@ -322,97 +322,7 @@
         </footer>
     </div>
     
-    <!-- 自定义脚本 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 生成二维码
-            generateQRCodes();
-            
-            // 检查URL参数并自动连接
-            checkUrlAndAutoConnect();
-            
-            // 设置语言按钮点击事件
-            const languageButtons = document.querySelectorAll('.language-button');
-            languageButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // 移除其他按钮的active类
-                    languageButtons.forEach(btn => btn.classList.remove('active'));
-                    // 添加当前按钮的active类
-                    button.classList.add('active');
-                });
-            });
-            
-            // 设置连接按钮点击事件
-            const connectButton = document.getElementById('connect-button');
-            if (connectButton) {
-                connectButton.addEventListener('click', () => {
-                    const activeButton = document.querySelector('.language-button.active');
-                    if (activeButton) {
-                        const langCode = activeButton.dataset.code;
-                        const roomName = `room-${langCode}`;
-                        const identity = `audience_${Date.now()}`;
-                        const url = `/interpreter.html?room=${roomName}&identity=${identity}`;
-                        window.location.href = url;
-                    } else {
-                        alert('请先选择一种语言');
-                    }
-                });
-            }
-        });
-        
-        // 生成二维码
-        function generateQRCodes() {
-            const baseUrl = window.location.origin;
-            const languages = [
-                {code: 'en', element: 'qrcode-en'},
-                {code: 'vn', element: 'qrcode-vi'},
-                {code: 'id', element: 'qrcode-id'},
-                {code: 'kr', element: 'qrcode-kr'}
-            ];
-            
-            languages.forEach(lang => {
-                const qrCanvas = document.getElementById(lang.element);
-                if (qrCanvas) {
-                    const roomName = `room-${lang.code}`;
-                    const identity = `audience_static`;
-                    const qrUrl = `${baseUrl}/interpreter.html?room=${roomName}&identity=${identity}`;
-                    
-                    QRCode.toCanvas(qrCanvas, qrUrl, {
-                        width: 128,
-                        margin: 1,
-                        color: {
-                            dark: '#4a6cf7',
-                            light: '#ffffff'
-                        }
-                    }, function(error) {
-                        if (error) console.error(`生成${lang.code}二维码失败:`, error);
-                    });
-                }
-            });
-        }
-        
-        // 检查URL参数并自动连接
-        function checkUrlAndAutoConnect() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const langParam = urlParams.get('lang');
-            
-            if (langParam) {
-                const validLanguages = ['en', 'vn', 'id', 'kr'];
-                if (validLanguages.includes(langParam)) {
-                    // 找到对应的按钮并设置为active
-                    const buttons = document.querySelectorAll('.language-button');
-                    buttons.forEach(btn => {
-                        if (btn.dataset.code === langParam) {
-                            btn.classList.add('active');
-                            // 自动点击连接按钮
-                            setTimeout(() => {
-                                document.getElementById('connect-button').click();
-                            }, 500);
-                        }
-                    });
-                }
-            }
-        }
-    </script>
+    <!-- 自定义脚本 - 使用绝对路径 -->
+    <script src="/static/player.js"></script>
 </body>
 </html> 
