@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Request, HTTPException, Depends, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi import FastAPI, Request, HTTPException, Depends, WebSocket, WebSocketDisconnect, BackgroundTasks, Response
 from fastapi.responses import JSONResponse, HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -37,13 +37,23 @@ templates = Jinja2Templates(directory="templates")
 # 添加JS路径别名路由
 @app.get("/js/{file_path:path}")
 async def get_js_file(file_path: str):
-    # 重定向到正确的静态文件路径
-    return RedirectResponse(url=f"/static/js/{file_path}")
+    # 检查文件是否存在
+    js_path = f"static/js/{file_path}"
+    if os.path.exists(js_path):
+        return FileResponse(js_path)
+    else:
+        # 文件不存在时返回404，但不抛出异常
+        return Response(status_code=404)
 
 # 添加favicon.ico路由
 @app.get("/favicon.ico")
 async def get_favicon():
-    return FileResponse("static/favicon.ico", media_type="image/x-icon")
+    # 检查文件是否存在
+    if os.path.exists("static/favicon.ico"):
+        return FileResponse("static/favicon.ico", media_type="image/x-icon")
+    else:
+        # 文件不存在时返回空响应，避免错误
+        return Response(status_code=204)
 
 # 活跃的WebSocket连接
 active_websockets: Dict[str, List[WebSocket]] = {}
@@ -242,6 +252,19 @@ async def debug_env():
         "TWILIO_ENABLED": settings.TWILIO_ENABLED,
         "REDIS_ENABLED": settings.REDIS_ENABLED,
         "AUDIO_QUALITY_ADAPTIVE": settings.AUDIO_QUALITY_ADAPTIVE
+    }
+
+# 文件调试端点
+@app.get("/debug_files")
+async def debug_files():
+    return {
+        "favicon_exists": os.path.exists("static/favicon.ico"),
+        "interpreter_js_exists": os.path.exists("static/js/interpreter.js"),
+        "static_dir_exists": os.path.isdir("static"),
+        "static_js_dir_exists": os.path.isdir("static/js"),
+        "cwd": os.getcwd(),
+        "static_files": os.listdir("static") if os.path.isdir("static") else [],
+        "static_js_files": os.listdir("static/js") if os.path.isdir("static/js") else []
     }
 
 # WebSocket连接处理
